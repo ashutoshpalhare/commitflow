@@ -7,7 +7,7 @@ export function dayKey(d: Date): string {
 }
 
 export function parseDayKey(key: string): Date {
-  const [y, m, d] = key.split("-").map(Number);
+  const [y = 0, m = 1, d = 1] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
 
@@ -84,6 +84,7 @@ export function computeStreaks(days: DayBucket[]): { current: number; longest: n
   let current = 0;
   for (let i = days.length - 1; i >= 0; i--) {
     const day = days[i];
+    if (!day) break;
     if (day.count > 0) current++;
     else if (i === days.length - 1) continue; // today still open
     else break;
