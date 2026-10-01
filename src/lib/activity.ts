@@ -97,9 +97,10 @@ export function weeklyBuckets(days: DayBucket[]): { label: string; total: number
   const weeks: { label: string; total: number; days: number }[] = [];
   for (let i = 0; i < days.length; i += 7) {
     const slice = days.slice(i, i + 7);
-    if (!slice.length) continue;
+    const first = slice[0];
+    if (!first) continue;
     weeks.push({
-      label: slice[0].date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      label: first.date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
       total: slice.reduce((s, d) => s + d.count, 0),
       days: slice.filter((d) => d.count > 0).length,
     });
