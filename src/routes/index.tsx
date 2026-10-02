@@ -242,7 +242,7 @@ function Dashboard() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-5 text-xs text-muted-foreground">
+              <div className="flex w-full gap-5 text-xs text-muted-foreground sm:w-auto">
                 <span className="inline-flex items-center gap-1">
                   <Users className="size-3" aria-hidden /> {profile.data.followers} followers
                 </span>
