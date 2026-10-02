@@ -86,21 +86,26 @@ export function computeStreaks(days: DayBucket[]): { current: number; longest: n
     const day = days[i];
     if (!day) break;
     if (day.count > 0) current++;
-    else if (i === days.length - 1) continue; // today still open
+    else if (i === days.length - 1)
+      continue; // today still open
     else break;
   }
 
   return { current, longest };
 }
 
-export function weeklyBuckets(days: DayBucket[]): { label: string; total: number; days: number }[] {
-  const weeks: { label: string; total: number; days: number }[] = [];
-  for (let i = 0; i < days.length; i += 7) {
+export function weeklyBuckets(
+  days: DayBucket[],
+): { label: string; dayOfMonth: number; total: number; days: number }[] {
+  const weeks: { label: string; dayOfMonth: number; total: number; days: number }[] = [];
+  // Align chunks to end on the latest day so the final bar is always the trailing 7 days.
+  for (let i = days.length % 7; i < days.length; i += 7) {
     const slice = days.slice(i, i + 7);
     const first = slice[0];
     if (!first) continue;
     weeks.push({
       label: first.date.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      dayOfMonth: first.date.getDate(),
       total: slice.reduce((s, d) => s + d.count, 0),
       days: slice.filter((d) => d.count > 0).length,
     });
@@ -129,9 +134,7 @@ export interface RepoHealth {
 }
 
 export function repoHealth(repo: GitHubRepo): RepoHealth {
-  const daysSincePush = Math.floor(
-    (Date.now() - new Date(repo.pushed_at).getTime()) / 86_400_000,
-  );
+  const daysSincePush = Math.floor((Date.now() - new Date(repo.pushed_at).getTime()) / 86_400_000);
 
   let score = 0;
   if (daysSincePush <= 3) score += 45;
@@ -194,7 +197,7 @@ export function buildFocus(
   const out: FocusSuggestion[] = [];
   const active = repos.filter((r) => !r.archived);
 
-  const noDesc = active.find((r) => !r.description);
+  const noDesc = active.find((r) => !r.fork && !r.description);
   if (noDesc)
     out.push({
       id: "desc",
@@ -258,7 +261,9 @@ export function buildFocus(
       detail: "Reviewable changes create a record of intent and make your work easier to follow.",
     });
 
-  const topRepo = active.filter((r) => !r.fork).sort((a, b) => b.stargazers_count - a.stargazers_count)[0];
+  const topRepo = active
+    .filter((r) => !r.fork)
+    .sort((a, b) => b.stargazers_count - a.stargazers_count)[0];
   if (topRepo)
     out.push({
       id: "a11y",

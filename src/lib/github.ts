@@ -11,10 +11,21 @@ export class GitHubError extends Error {
   }
 }
 
-async function gh<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
-    headers: { Accept: "application/vnd.github+json" },
-  });
+/** GitHub logins: 1–39 chars, alphanumeric or single hyphens, no leading/trailing hyphen. */
+export const USERNAME_RE = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
+
+async function ghRaw(path: string): Promise<Response> {
+  let res: Response;
+  try {
+    res = await fetch(`${API}${path}`, {
+      headers: { Accept: "application/vnd.github+json" },
+    });
+  } catch {
+    throw new GitHubError(
+      "Couldn't reach GitHub. Check your internet connection and try again.",
+      0,
+    );
+  }
 
   if (!res.ok) {
     const remaining = res.headers.get("x-ratelimit-remaining");
@@ -37,7 +48,11 @@ async function gh<T>(path: string): Promise<T> {
     throw new GitHubError(detail || `GitHub request failed (${res.status}).`, res.status);
   }
 
-  return (await res.json()) as T;
+  return res;
+}
+
+async function gh<T>(path: string): Promise<T> {
+  return (await (await ghRaw(path)).json()) as T;
 }
 
 export interface GitHubUser {
@@ -92,20 +107,38 @@ export interface GitHubEvent {
 
 export const fetchUser = (login: string) => gh<GitHubUser>(`/users/${encodeURIComponent(login)}`);
 
-export const fetchRepos = (login: string) =>
-  gh<GitHubRepo[]>(`/users/${encodeURIComponent(login)}/repos?sort=pushed&per_page=100&type=owner`);
+const MAX_REPO_PAGES = 5; // up to 500 repos; caps request cost for huge accounts
 
+/** Follows GitHub's Link header so accounts with >100 repos are fully covered. */
+export async function fetchRepos(login: string): Promise<GitHubRepo[]> {
+  const all: GitHubRepo[] = [];
+  for (let page = 1; page <= MAX_REPO_PAGES; page++) {
+    const res = await ghRaw(
+      `/users/${encodeURIComponent(login)}/repos?sort=pushed&per_page=100&type=owner&page=${page}`,
+    );
+    const batch = (await res.json()) as GitHubRepo[];
+    all.push(...batch);
+    if (batch.length < 100 || !/rel="next"/.test(res.headers.get("link") ?? "")) break;
+  }
+  return all;
+}
+
+/** Fetched sequentially and stops early, so light accounts cost one request, not three. */
 export async function fetchEvents(login: string): Promise<GitHubEvent[]> {
-  const pages = await Promise.all(
-    [1, 2, 3].map((p) =>
-      gh<GitHubEvent[]>(
+  const pages: GitHubEvent[][] = [];
+  for (let p = 1; p <= 3; p++) {
+    try {
+      const batch = await gh<GitHubEvent[]>(
         `/users/${encodeURIComponent(login)}/events/public?per_page=100&page=${p}`,
-      ).catch((err: unknown) => {
-        if (err instanceof GitHubError && err.rateLimited) throw err;
-        return [] as GitHubEvent[];
-      }),
-    ),
-  );
+      );
+      pages.push(batch);
+      if (batch.length < 100) break;
+    } catch (err) {
+      // Page 1 failures and rate limits are real errors; later pages (GitHub caps at ~300 events) are not.
+      if (p === 1 || (err instanceof GitHubError && err.rateLimited)) throw err;
+      break;
+    }
+  }
   const seen = new Set<string>();
   return pages
     .flat()

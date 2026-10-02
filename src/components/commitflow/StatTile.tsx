@@ -10,7 +10,11 @@ interface Props {
 
 export function StatTile({ label, value, hint, icon: Icon, tone = "default" }: Props) {
   const toneClass =
-    tone === "primary" ? "text-primary" : tone === "accent" ? "text-accent" : "text-muted-foreground";
+    tone === "primary"
+      ? "text-primary"
+      : tone === "accent"
+        ? "text-accent"
+        : "text-muted-foreground";
 
   return (
     <div className="panel panel-hover p-4">

@@ -22,7 +22,7 @@ export function WeeklyTrend({ days }: { days: DayBucket[] }) {
           className={`font-mono text-xs tabular-nums ${delta > 0 ? "text-primary" : delta < 0 ? "text-warning" : "text-muted-foreground"}`}
         >
           {delta > 0 ? "+" : ""}
-          {delta} vs last week
+          {delta} vs prior 7 days
         </span>
       </div>
 
@@ -36,7 +36,7 @@ export function WeeklyTrend({ days }: { days: DayBucket[] }) {
               role="img"
               aria-label={`Week of ${w.label}: ${w.total} activity points, ${w.days} active days`}
             />
-            <span className="text-[9px] text-muted-foreground">{w.label.split(" ")[1]}</span>
+            <span className="text-[9px] text-muted-foreground">{w.dayOfMonth}</span>
           </div>
         ))}
       </div>
