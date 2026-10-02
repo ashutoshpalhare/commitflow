@@ -68,6 +68,7 @@ function Dashboard() {
     retry: false,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    networkMode: "always", // fail fast offline so the network-error panel shows instead of a blank page
   });
 
   const repos = useQuery({
@@ -77,6 +78,7 @@ function Dashboard() {
     retry: false,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    networkMode: "always", // fail fast offline so the network-error panel shows instead of a blank page
   });
 
   const events = useQuery({
@@ -86,6 +88,7 @@ function Dashboard() {
     retry: false,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    networkMode: "always", // fail fast offline so the network-error panel shows instead of a blank page
   });
 
   const eventList = useMemo(() => events.data ?? [], [events.data]);
