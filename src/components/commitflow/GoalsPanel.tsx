@@ -10,12 +10,13 @@ interface Props {
   weekActiveDays: number;
 }
 
-function Bar({ value, goal }: { value: number; goal: number }) {
+function Bar({ value, goal, label }: { value: number; goal: number; label: string }) {
   const pct = goal > 0 ? Math.min(100, Math.round((value / goal) * 100)) : 0;
   return (
     <div
       className="h-2 w-full overflow-hidden rounded-full bg-muted"
       role="progressbar"
+      aria-label={label}
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
@@ -57,7 +58,7 @@ export function GoalsPanel({
             </span>
           </div>
           <div className="mt-2">
-            <Bar value={todayCount} goal={daily} />
+            <Bar value={todayCount} goal={daily} label="Daily goal progress" />
           </div>
           <input
             id="daily-goal"
@@ -81,7 +82,7 @@ export function GoalsPanel({
             </span>
           </div>
           <div className="mt-2">
-            <Bar value={weekCount} goal={weekly} />
+            <Bar value={weekCount} goal={weekly} label="Weekly goal progress" />
           </div>
           <input
             id="weekly-goal"

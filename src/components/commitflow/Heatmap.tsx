@@ -25,7 +25,11 @@ export function Heatmap({ days }: { days: DayBucket[] }) {
   });
 
   return (
-    <div className="overflow-x-auto pb-1">
+    <div
+      className="overflow-x-auto pb-1"
+      tabIndex={0}
+      aria-label="Contribution heatmap, scrollable"
+    >
       <div className="min-w-[620px]">
         <div className="mb-1 flex gap-[3px] pl-8">
           {monthLabels.map((label, i) => (
@@ -51,11 +55,10 @@ export function Heatmap({ days }: { days: DayBucket[] }) {
                 return (
                   <div
                     key={ri}
-                    tabIndex={0}
                     role="img"
                     title={`${day.date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} — ${day.count} activity point${day.count === 1 ? "" : "s"}`}
                     aria-label={`${day.date.toDateString()}: ${day.count} activity points`}
-                    className={`size-[13px] rounded-[3px] ${LEVEL_CLASS[level]} ring-offset-2 ring-offset-background transition-transform hover:scale-125`}
+                    className={`size-[13px] rounded-[3px] ${LEVEL_CLASS[level]}`}
                   />
                 );
               })}

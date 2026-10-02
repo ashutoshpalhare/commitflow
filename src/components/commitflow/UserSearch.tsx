@@ -1,5 +1,6 @@
 import { Github, Search, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { USERNAME_RE } from "@/lib/github";
 
 interface Props {
   value: string;
@@ -11,13 +12,22 @@ interface Props {
 
 export function UserSearch({ value, onSubmit, recent, onClearRecent, busy }: Props) {
   const [draft, setDraft] = useState(value);
+  const [invalid, setInvalid] = useState(false);
 
   useEffect(() => setDraft(value), [value]);
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const clean = draft.trim().replace(/^@/, "").replace(/^https?:\/\/github\.com\//i, "").split("/")[0];
-    if (clean) onSubmit(clean);
+    const clean = draft
+      .trim()
+      .replace(/^@/, "")
+      .replace(/^https?:\/\/github\.com\//i, "")
+      .split("/")[0];
+    if (!clean) return;
+    // Reject impossible usernames locally instead of spending a rate-limited request.
+    if (!USERNAME_RE.test(clean)) return setInvalid(true);
+    setInvalid(false);
+    onSubmit(clean);
   }
 
   return (
@@ -31,7 +41,12 @@ export function UserSearch({ value, onSubmit, recent, onClearRecent, busy }: Pro
           <input
             type="text"
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              setInvalid(false);
+            }}
+            aria-invalid={invalid}
+            aria-describedby={invalid ? "username-error" : undefined}
             placeholder="GitHub username"
             aria-label="GitHub username"
             autoComplete="off"
@@ -48,6 +63,11 @@ export function UserSearch({ value, onSubmit, recent, onClearRecent, busy }: Pro
           {busy ? "Loading…" : "Analyze"}
         </button>
       </form>
+      {invalid && (
+        <p id="username-error" role="alert" className="mt-2 text-xs text-destructive">
+          That isn&rsquo;t a valid GitHub username (letters, numbers and single hyphens, max 39).
+        </p>
+      )}
 
       {recent.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">

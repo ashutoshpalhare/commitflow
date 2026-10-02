@@ -21,13 +21,7 @@ import { ActivityFeed } from "@/components/commitflow/ActivityFeed";
 import { WeeklyTrend } from "@/components/commitflow/WeeklyTrend";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { GitHubError, fetchEvents, fetchRepos, fetchUser } from "@/lib/github";
-import {
-  buildDays,
-  buildFocus,
-  computeStreaks,
-  dayKey,
-  startOfWeek,
-} from "@/lib/activity";
+import { buildDays, buildFocus, computeStreaks, dayKey, startOfWeek } from "@/lib/activity";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -54,10 +48,15 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const [username, setUsername, usernameLoaded] = useLocalStorage<string>("cf.username", "");
   const [recent, setRecent] = useLocalStorage<string[]>("cf.recent", []);
-  const [daily, setDaily] = useLocalStorage<number>("cf.goal.daily", 5);
-  const [weekly, setWeekly] = useLocalStorage<number>("cf.goal.weekly", 25);
+  const [dailyRaw, setDaily] = useLocalStorage<number>("cf.goal.daily", 5);
+  const [weeklyRaw, setWeekly] = useLocalStorage<number>("cf.goal.weekly", 25);
   const [doneMap, setDoneMap] = useLocalStorage<Record<string, string[]>>("cf.focus.done", {});
   const [pending, setPending] = useState("");
+  // Guard against corrupt/out-of-range values in storage.
+  const clamp = (n: unknown, lo: number, hi: number, d: number) =>
+    typeof n === "number" && Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d;
+  const daily = clamp(dailyRaw, 1, 20, 5);
+  const weekly = clamp(weeklyRaw, 5, 100, 25);
 
   const login = username.trim();
   const enabled = usernameLoaded && login.length > 0;
@@ -68,6 +67,8 @@ function Dashboard() {
     enabled,
     retry: false,
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    networkMode: "always", // fail fast offline so the network-error panel shows instead of a blank page
   });
 
   const repos = useQuery({
@@ -76,6 +77,8 @@ function Dashboard() {
     enabled: enabled && profile.isSuccess,
     retry: false,
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    networkMode: "always", // fail fast offline so the network-error panel shows instead of a blank page
   });
 
   const events = useQuery({
@@ -84,6 +87,8 @@ function Dashboard() {
     enabled: enabled && profile.isSuccess,
     retry: false,
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+    networkMode: "always", // fail fast offline so the network-error panel shows instead of a blank page
   });
 
   const eventList = useMemo(() => events.data ?? [], [events.data]);
@@ -114,7 +119,9 @@ function Dashboard() {
   function search(name: string) {
     setPending(name);
     setUsername(name);
-    setRecent((prev) => [name, ...prev.filter((r) => r.toLowerCase() !== name.toLowerCase())].slice(0, 5));
+    setRecent((prev) =>
+      [name, ...prev.filter((r) => r.toLowerCase() !== name.toLowerCase())].slice(0, 5),
+    );
   }
 
   const error = (profile.error ?? repos.error ?? events.error) as Error | null;
@@ -156,9 +163,9 @@ function Dashboard() {
               Measure engineering progress, not commit counts
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Enter any GitHub username to see streaks, weekly trends, repository health and a
-              focus list built from real repository signals. Everything runs on public GitHub data;
-              your goals stay in this browser.
+              Enter any GitHub username to see streaks, weekly trends, repository health and a focus
+              list built from real repository signals. Everything runs on public GitHub data; your
+              goals stay in this browser.
             </p>
           </div>
         )}
@@ -173,19 +180,23 @@ function Dashboard() {
               <h2 className="text-sm font-semibold">
                 {error instanceof GitHubError && error.rateLimited
                   ? "GitHub rate limit reached"
-                  : "Couldn't load that profile"}
+                  : error instanceof GitHubError && error.status === 0
+                    ? "Network error"
+                    : "Couldn't load that profile"}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">{error.message}</p>
-              <button
-                onClick={() => {
-                  void profile.refetch();
-                  void repos.refetch();
-                  void events.refetch();
-                }}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs panel-hover"
-              >
-                <RefreshCw className="size-3" aria-hidden /> Retry
-              </button>
+              {!(error instanceof GitHubError && (error.rateLimited || error.status === 404)) && (
+                <button
+                  onClick={() => {
+                    void profile.refetch();
+                    void repos.refetch();
+                    void events.refetch();
+                  }}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs panel-hover"
+                >
+                  <RefreshCw className="size-3" aria-hidden /> Retry
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -231,7 +242,7 @@ function Dashboard() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-5 text-xs text-muted-foreground">
+              <div className="flex w-full gap-5 text-xs text-muted-foreground sm:w-auto">
                 <span className="inline-flex items-center gap-1">
                   <Users className="size-3" aria-hidden /> {profile.data.followers} followers
                 </span>
