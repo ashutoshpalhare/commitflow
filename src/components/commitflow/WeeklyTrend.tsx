@@ -28,15 +28,19 @@ export function WeeklyTrend({ days }: { days: DayBucket[] }) {
 
       <div className="mt-5 flex h-28 items-end gap-1.5">
         {weeks.map((w, i) => (
-          <div key={i} className="group flex flex-1 flex-col items-center gap-1.5">
-            <div
-              className="w-full rounded-t-sm bg-chart-1/70 transition-colors group-hover:bg-chart-1"
-              style={{ height: `${Math.max(3, (w.total / max) * 100)}%` }}
-              title={`Week of ${w.label}: ${w.total} points across ${w.days} active day(s)`}
-              role="img"
-              aria-label={`Week of ${w.label}: ${w.total} activity points, ${w.days} active days`}
-            />
-            <span className="text-[9px] text-muted-foreground">{w.dayOfMonth}</span>
+          <div key={i} className="group flex h-full flex-1 flex-col items-center gap-1.5">
+            <div className="flex w-full flex-1 items-end">
+              <div
+                className="w-full rounded-t-sm bg-chart-1/70 transition-colors group-hover:bg-chart-1"
+                style={{ height: `${Math.max(3, (w.total / max) * 100)}%` }}
+                title={`Week of ${w.label}: ${w.total} points across ${w.days} active day(s)`}
+                role="img"
+                aria-label={`Week of ${w.label}: ${w.total} activity points, ${w.days} active days`}
+              />
+            </div>
+            <span className="text-[10px] text-muted-foreground" aria-hidden>
+              {w.dayOfMonth}
+            </span>
           </div>
         ))}
       </div>

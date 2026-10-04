@@ -41,11 +41,12 @@ function describe(e: GitHubEvent) {
   const repo = e.repo.name;
   switch (e.type) {
     case "PushEvent": {
-      const n = e.payload.commits?.length ?? e.payload.size ?? 0;
+      // GitHub's public events often omit commit details; don't show a misleading "0 commits".
+      const n = e.payload.commits?.length || e.payload.size || 0;
       const msg = e.payload.commits?.[0]?.message.split("\n")[0];
       return {
         icon: GitCommit,
-        title: `${n} commit${n === 1 ? "" : "s"} to ${repo}`,
+        title: n > 0 ? `${n} commit${n === 1 ? "" : "s"} to ${repo}` : `Pushed to ${repo}`,
         detail: msg,
         href: `https://github.com/${repo}`,
       };
