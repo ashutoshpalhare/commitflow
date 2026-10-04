@@ -2,8 +2,8 @@
 import { writeFileSync, copyFileSync, writeFileSync as w } from "node:fs";
 const mod = await import(new URL("../dist/server/index.mjs", import.meta.url));
 const handler = mod.default?.fetch ?? mod.default;
-const res = await handler(new Request("http://localhost/"), {}, { waitUntil() {}, passThroughOnException() {} });
-const html = await res.text();
+const res = await handler(new Request("http://localhost/commitflow/"), {}, { waitUntil() {}, passThroughOnException() {} });
+const html = (await res.text()).replaceAll("\"/assets/", "\"/commitflow/assets/").replaceAll("\"/favicon", "\"/commitflow/favicon");
 if (!res.ok || !html.includes("<html")) throw new Error(`Shell render failed: ${res.status}\n${html.slice(0, 500)}`);
 writeFileSync("dist/client/index.html", html);
 copyFileSync("dist/client/index.html", "dist/client/404.html");

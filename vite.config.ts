@@ -16,7 +16,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
     ...(pages
-      ? { router: { basepath: base }, spa: { enabled: true, prerender: { outputPath: "/index.html" } } }
+      ? { spa: { enabled: true } }
       : {}),
   },
   vite: { base },
