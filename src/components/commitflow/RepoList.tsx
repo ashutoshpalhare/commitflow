@@ -76,7 +76,7 @@ export function RepoList({ repos }: { repos: GitHubRepo[] }) {
                   <span className="font-mono">health {h.score}</span>
                 </div>
                 {h.gaps.length > 0 && (
-                  <p className="mt-1 text-[11px] text-muted-foreground/80">
+                  <p className="mt-1 text-[11px] text-muted-foreground">
                     Gaps: {h.gaps.slice(0, 3).join(" · ")}
                   </p>
                 )}
