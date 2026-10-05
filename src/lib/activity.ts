@@ -15,7 +15,7 @@ export function parseDayKey(key: string): Date {
 function weight(e: GitHubEvent): number {
   switch (e.type) {
     case "PushEvent":
-      return Math.max(1, e.payload.commits?.length ?? e.payload.size ?? 1);
+      return Math.max(1, e.payload.commits?.length || e.payload.size || 1);
     case "PullRequestEvent":
       return 3;
     case "ReleaseEvent":

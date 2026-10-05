@@ -126,7 +126,7 @@ function Dashboard() {
 
   const error = (profile.error ?? repos.error ?? events.error) as Error | null;
   const loading = profile.isFetching || repos.isFetching || events.isFetching;
-  const ready = profile.isSuccess && events.isSuccess;
+  const ready = profile.isSuccess && repos.isSuccess && events.isSuccess;
 
   return (
     <div className="min-h-screen bg-background">

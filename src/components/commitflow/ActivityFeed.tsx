@@ -116,12 +116,12 @@ export function ActivityFeed({ events }: { events: GitHubEvent[] }) {
             Recent work
           </h2>
         </div>
-        <div className="flex flex-wrap gap-1" role="tablist" aria-label="Activity filter">
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Activity filter">
           {TABS.map((t) => (
             <button
               key={t.id}
-              role="tab"
-              aria-selected={tab === t.id}
+              type="button"
+              aria-pressed={tab === t.id}
               onClick={() => setTab(t.id)}
               className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
                 tab === t.id
