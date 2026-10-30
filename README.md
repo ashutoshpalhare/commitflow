@@ -87,8 +87,9 @@ Because requests are unauthenticated:
 
 ```text
 .
-├── components/
-│   └── commitflow/
+├── src/
+│   ├── components/
+│   │   └── commitflow/
 │       ├── ActivityFeed.tsx
 │       ├── GoalsPanel.tsx
 │       ├── Heatmap.tsx
@@ -97,7 +98,6 @@ Because requests are unauthenticated:
 │       ├── TodaysFocus.tsx
 │       ├── UserSearch.tsx
 │       └── WeeklyTrend.tsx
-├── src/
 │   ├── lib/
 │   │   ├── activity.ts
 │   │   └── github.ts
